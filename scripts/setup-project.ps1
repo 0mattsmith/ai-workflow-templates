@@ -18,7 +18,7 @@ Write-Host "       REMOTE GITHUB AI WORKFLOW - PROJECT SETUP          " -Foregro
 Write-Host "==========================================================" -ForegroundColor Cyan
 Write-Host ""
 
-# 1. Project Inputs
+# 1. Project Configuration
 $projectName = Read-Host "Enter Project Name (e.g., auth-service)"
 if ([string]::IsNullOrWhiteSpace($projectName)) { Write-Error "Project name required."; exit 1 }
 
@@ -36,18 +36,31 @@ if ([string]::IsNullOrWhiteSpace($targetParentDir)) { $targetParentDir = $defaul
 $projectPath = Join-Path -Path $targetParentDir -ChildPath $projectName
 if (-not (Test-Path $projectPath)) { New-Item -ItemType Directory -Path $projectPath -Force | Out-Null }
 
-Write-Host "`nEnter your initial Project Brief / Feature Concept." -ForegroundColor Yellow
-Write-Host "(Paste prompt, then type 'EOF' on a new line and press Enter):" -ForegroundColor Yellow
+# 2. Project Brief (File Drop or Interactive Typing)
+Write-Host "`nProvide Initial Project Brief / Idea:" -ForegroundColor Yellow
+$fileInput = Read-Host "Drag & drop a brief.md file path (or press Enter to paste manually)"
 
-$briefLines = @()
-while ($true) {
-    $line = [Console]::ReadLine()
-    if ($line -eq "EOF") { break }
-    $briefLines += $line
+$projectBrief = ""
+$cleanedPath = $fileInput.Trim('"', "'").Trim()
+
+if (-not [string]::IsNullOrWhiteSpace($cleanedPath) -and (Test-Path -Path $cleanedPath -PathType Leaf)) {
+    $projectBrief = Get-Content -Path $cleanedPath -Raw
+    Write-Host "Loaded brief from: $cleanedPath" -ForegroundColor Green
+} else {
+    if (-not [string]::IsNullOrWhiteSpace($cleanedPath)) {
+        Write-Warning "File '$cleanedPath' not found. Switching to manual text input."
+    }
+    Write-Host "Paste prompt, then type 'EOF' on a new line and press Enter:" -ForegroundColor Yellow
+    $briefLines = @()
+    while ($true) {
+        $line = [Console]::ReadLine()
+        if ($line -eq "EOF") { break }
+        $briefLines += $line
+    }
+    $projectBrief = $briefLines -join "`n"
 }
-$projectBrief = $briefLines -join "`n"
 
-# 2. Directory Structure
+# 3. Directory Structure
 Write-Host "`n[1/4] Creating local state directories..." -ForegroundColor Green
 $folders = @(".workflow/active", ".workflow/archive", "src", "tests")
 foreach ($folder in $folders) {
@@ -55,7 +68,7 @@ foreach ($folder in $folders) {
     if (-not (Test-Path $fullPath)) { New-Item -ItemType Directory -Path $fullPath -Force | Out-Null }
 }
 
-# 3. Save Brief
+# 4. Save Brief
 $initialBrief = @"
 # INITIAL PROJECT BRIEF: $projectName
 **Date:** $(Get-Date -Format "yyyy-MM-dd HH:mm")
@@ -65,7 +78,7 @@ $projectBrief
 "@
 Set-Content -Path (Join-Path $projectPath ".workflow/active/brief.md") -Value $initialBrief -Encoding utf8
 
-# 4. Generate Dynamic Workflow Runner
+# 5. Generate Dynamic Workflow Runner
 Write-Host "[2/4] Generating remote-synced workflow runner (workflow.ps1)..." -ForegroundColor Green
 
 $runnerScript = @"
@@ -177,7 +190,7 @@ switch (`$Action) {
 
 Set-Content -Path (Join-Path $projectPath "workflow.ps1") -Value $runnerScript -Encoding utf8
 
-# 5. Git Init
+# 6. Git Init
 Write-Host "[3/4] Initializing local Git repository..." -ForegroundColor Green
 Push-Location $projectPath
 try {
