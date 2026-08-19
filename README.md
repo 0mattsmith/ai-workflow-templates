@@ -1,12 +1,12 @@
 # AI Workflow Templates
 
-Master architectural rulesets, deterministic role specifications, and automation tooling for a tri-model AI software development workflow: **PLANNING**, **BUILDING**, and **REVIEWING**, with human-in-the-loop **TESTING** and **MERGE** gates[cite: 8].
+Master architectural rulesets, deterministic role specifications, and automation tooling for a tri-model AI software development workflow: **PLANNING**, **BUILDING**, and **REVIEWING**, with human-in-the-loop **TESTING** and **MERGE** gates.
 
 ---
 
 ## 1. Workflow Architecture
 
-This repository defines a deterministic, file-contract-driven development loop designed to eliminate hallucinations, scope drift, and unauthorized code alterations across autonomous AI agents[cite: 8].
+This repository defines a deterministic, file-contract-driven development loop designed to eliminate hallucinations, scope drift, and unauthorized code alterations across autonomous AI agents.
 
 ```text
 +-----------------------------------------------------------------------------------+
@@ -33,12 +33,16 @@ This repository defines a deterministic, file-contract-driven development loop d
 
 ---
 
-## 2. Core Roles & Invariants
+## 2. Core Roles & Autonomous Triggers
 
-* **PLANNING Model (`rules/planning.md`):** The **sole authority of change**[cite: 5]. Translates feature requirements and review feedback into deterministic, unambiguous blueprints (`plan.md`)[cite: 5]. Neither the Builder nor Reviewer may introduce scope or modify contracts outside of `plan.md`[cite: 5].
-* **BUILDING Model (`rules/building.md`):** Executes `plan.md` with zero deviations[cite: 6]. Captures raw terminal test/linter logs, ensures a clean Git working tree, and generates `handover.md` with technical notes to accelerate review[cite: 6].
-* **REVIEWING Model (`rules/reviewing.md`):** Pure static analysis and QA auditor[cite: 7]. **Strictly prohibited from modifying codebase files directly**[cite: 7]. Proposes code diffs in `review.md` and routes either back to Planning (`STATUS: REVISE`) or forward to the Project Lead (`STATUS: READY_FOR_TEST`)[cite: 7].
-* **Project Lead (Human):** Final authority[cite: 8]. Performs manual acceptance testing and executes repository merges[cite: 8]. Arbitrates if the **anti-deadlock circuit breaker** triggers (exceeding 2 automated review cycles)[cite: 8].
+Each model specification includes an **Autonomous Trigger Resolution Rule (Rule 6)**, allowing you to activate agents in GUI environments (such as Antigravity, Claude Cowork, or Cursor) with single-phrase prompts:
+
+| Model | Specification | Primary Role | Accepted Trigger Phrases |
+| :--- | :--- | :--- | :--- |
+| **PLANNER** | `rules/planning.md` | **Sole Authority of Change.** Synthesizes briefs/reviews into strict blueprints (`plan.md`). | `"You're up!"`, `"Plan"`, `"Go"`, `"Next"` |
+| **BUILDER** | `rules/building.md` | **Senior Implementation Engineer.** Executes `plan.md` with zero deviations and clean Git commits. | `"You're up!"`, `"Build"`, `"Execute"`, `"Go"` |
+| **REVIEWER** | `rules/reviewing.md` | **Principal Code Auditor.** Pure QA static analysis. Strictly zero direct file edits. | `"You're up!"`, `"Review"`, `"Audit"`, `"Go"` |
+| **LEAD (Human)**| `rules/workflow.md` | Human-in-the-loop tester, escalation arbiter, and release merge authority. | — |
 
 ---
 
@@ -47,10 +51,10 @@ This repository defines a deterministic, file-contract-driven development loop d
 ```text
 ai-workflow-templates/
 ├── rules/
-│   ├── planning.md          # Architect system prompt & plan.md schema[cite: 5]
-│   ├── building.md          # Implementation engineer prompt & handover.md schema[cite: 6]
-│   ├── reviewing.md         # Auditor system prompt & review.md schema[cite: 7]
-│   └── workflow.md          # Master 5-stage lifecycle and invariant rules[cite: 8]
+│   ├── planning.md          # Architect system prompt & plan.md schema
+│   ├── building.md          # Implementation engineer prompt & handover.md schema
+│   ├── reviewing.md         # Auditor system prompt & review.md schema
+│   └── workflow.md          # Master 5-stage lifecycle and invariant rules
 ├── scripts/
 │   └── setup-project.ps1    # Interactive project generator & remote fetcher
 └── README.md
@@ -64,20 +68,21 @@ Run the scaffolding script directly in PowerShell from any terminal to initializ
 
 ```powershell
 # Run setup interactively
-.\scripts\setup-project.ps1
+irm [https://raw.githubusercontent.com/0mattsmith/ai-workflow-templates/main/scripts/setup-project.ps1](https://raw.githubusercontent.com/0mattsmith/ai-workflow-templates/main/scripts/setup-project.ps1) | iex
 ```
 
-The setup script will:
-1. Prompt for **Project Name**, **Target Directory**, and your **Initial Project Brief**.
-2. Create standard folder scaffolding (`.workflow/active`, `.workflow/archive`, `src`, `tests`)[cite: 8].
-3. Generate a project-local `workflow.ps1` runner that pulls fresh rules directly from GitHub at runtime.
-4. Initialize a Git repository with a baseline commit and checkout `main`.
+**What the setup script does:**
+1. Prompts for **Project Name** and **Destination Directory** (defaults to `Documents\Development\<ProjectName>`).
+2. Ingests an initial brief via drag-and-drop file path or interactive multi-line terminal paste.
+3. Creates standard workspace scaffolding (`.workflow/active`, `.workflow/archive`, `src`, `tests`).
+4. Generates a project-local `workflow.ps1` runner that dynamically fetches fresh rules from GitHub.
+5. Initializes a local Git repository with a baseline commit on branch `main`.
 
 ---
 
-## 5. Daily Project Operations (`workflow.ps1`)
+## 5. Daily Project Operations
 
-Inside any scaffolded project directory, use the local runner to operate the loop:
+### Terminal / CLI Mode (`workflow.ps1`)
 
 ```powershell
 # 1. Trigger Planning Model (creates .workflow/active/plan.md)
@@ -89,8 +94,11 @@ Inside any scaffolded project directory, use the local runner to operate the loo
 # 3. Trigger Reviewing Model (audits diff & proofs, generates .workflow/active/review.md)
 .\workflow.ps1 review
 
-# Check active artifact status and git tree
+# Check active artifact status and clean Git tree status
 .\workflow.ps1 status
+
+# Synchronize local cached rules with the latest GitHub definitions
+.\workflow.ps1 sync-rules
 
 # Archive completed phase artifacts to .workflow/archive/phase-01/
 .\workflow.ps1 archive -PhaseName "phase-01"
@@ -99,11 +107,17 @@ Inside any scaffolded project directory, use the local runner to operate the loo
 .\workflow.ps1 launch-workers
 ```
 
+### GUI / IDE Mode (Antigravity, Claude Cowork, Cursor)
+
+1. Open 3 persistent tabs/sessions named **`[01] Planner`**, **`[02] Builder`**, and **`[03] Reviewer`**.
+2. Point each session once to its respective rule file (`.workflow/rules/planning.md`, etc.).
+3. Advance the project through the stages by typing **`"You're up!"`** or **`"Go"`** in the appropriate tab.
+
 ---
 
 ## 6. Rules of Engagement
 
-1. **Deterministic Blueprints:** No placeholder instructions (`// TODO`, `implement as needed`)[cite: 5, 6].
-2. **Raw Execution Proofs:** Handover reports require verbatim exit codes and linter/test terminal outputs[cite: 6].
-3. **No Direct Reviewer Edits:** The Reviewer identifies and proposes; the Planner codifies; the Builder implements[cite: 7, 8].
-4. **Context Hygiene:** Past iterations are archived after each phase to keep the workspace and LLM context window minimal[cite: 8].
+1. **Deterministic Blueprints:** No placeholder instructions (`// TODO`, `implement as needed`).
+2. **Raw Execution Proofs:** Handover reports require verbatim exit codes and linter/test terminal outputs.
+3. **No Direct Reviewer Edits:** The Reviewer identifies and proposes; the Planner codifies; the Builder implements.
+4. **Context Hygiene:** Past iterations are archived after each phase to keep the workspace and LLM context window minimal.
