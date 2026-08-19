@@ -6,7 +6,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory=$false)]
-    [string]$GitHubRepo = "YOUR_USERNAME/ai-workflow-templates",
+    [string]$GitHubRepo = "0mattsmith/ai-workflow-templates",
 
     [Parameter(Mandatory=$false)]
     [string]$Branch = "main"
@@ -22,7 +22,14 @@ Write-Host ""
 $projectName = Read-Host "Enter Project Name (e.g., auth-service)"
 if ([string]::IsNullOrWhiteSpace($projectName)) { Write-Error "Project name required."; exit 1 }
 
-$defaultPath = Get-Location
+# Set default location to User Folder > Documents > Development
+$docsPath = [Environment]::GetFolderPath("MyDocuments")
+$defaultPath = Join-Path -Path $docsPath -ChildPath "Development"
+
+if (-not (Test-Path $defaultPath)) {
+    New-Item -ItemType Directory -Path $defaultPath -Force | Out-Null
+}
+
 $targetParentDir = Read-Host "Enter destination directory [Default: $defaultPath]"
 if ([string]::IsNullOrWhiteSpace($targetParentDir)) { $targetParentDir = $defaultPath }
 
@@ -33,17 +40,19 @@ Write-Host "`nEnter your initial Project Brief / Feature Concept." -ForegroundCo
 Write-Host "(Paste prompt, then type 'EOF' on a new line and press Enter):" -ForegroundColor Yellow
 
 $briefLines = @()
-while ($true) {$line = [Console]::ReadLine()
+while ($true) {
+    $line = [Console]::ReadLine()
     if ($line -eq "EOF") { break }
-    $briefLines +=$line
+    $briefLines += $line
 }
-$projectBrief =$briefLines -join "`n"
+$projectBrief = $briefLines -join "`n"
 
 # 2. Directory Structure
 Write-Host "`n[1/4] Creating local state directories..." -ForegroundColor Green
 $folders = @(".workflow/active", ".workflow/archive", "src", "tests")
-foreach ($folder in $folders) {$fullPath = Join-Path -Path $projectPath -ChildPath$folder
-    if (-not (Test-Path $fullPath)) { New-Item -ItemType Directory -Path$fullPath -Force | Out-Null }
+foreach ($folder in $folders) {
+    $fullPath = Join-Path -Path $projectPath -ChildPath $folder
+    if (-not (Test-Path $fullPath)) { New-Item -ItemType Directory -Path $fullPath -Force | Out-Null }
 }
 
 # 3. Save Brief
