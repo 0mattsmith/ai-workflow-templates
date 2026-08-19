@@ -61,3 +61,27 @@ Your entire output must conform to the following schema and be saved as `plan.md
 [Define exact TypeScript interfaces, Python type annotations, database schemas, API payloads, or function signatures]
 ```[language]
 // Exact signatures, inputs, outputs, errors
+```
+
+## 5. Step-by-Step Implementation Sequence
+1. **Step 1: [Component / File]**
+   - Exact logic to implement: [...]
+   - Edge cases to guard: [...]
+   - Dependencies: [...]
+2. **Step 2: [Component / File]**
+   - Exact logic to implement: [...]
+   - Edge cases to guard: [...]
+   - Dependencies: [...]
+
+## 6. Verification, Linter & Test Specification
+* **Validation Commands:** [e.g., `npm run lint`, `tsc --noEmit`, `pytest tests/test_feature.py`]
+* **Unit Tests:** [Target files, test cases, inputs, expected outputs]
+* **Integration Tests:** [API flows, mock boundaries, assertions]
+
+## 7. Handover Criteria for Builder
+* [ ] Target Branch in Section 1 verified or created before writing code.
+* [ ] All files in Section 3 created or modified as specified.
+* [ ] All contracts in Section 4 matched without modification.
+* [ ] Automated linter, type-check, and tests passing with zero errors.
+* [ ] Working tree clean (`git status --porcelain` is empty) and commit SHA recorded.
+* [ ] `handover.md` generated with raw execution proofs and reviewer notes.
